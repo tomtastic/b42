@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+
+.DS_Store
+
+/analysis/
+/b42-flash*.bin
+/pyproject.toml
+/uv.lock
