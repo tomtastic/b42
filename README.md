@@ -1,36 +1,90 @@
-<h1 align="center">B42 battery pack</h1>
-
-<p align="center"><strong>Read the pack. Unlock its output. Keep its protections.</strong><br>Hardware mapping, CAN telemetry and authenticated battery control.</p>
-
-## CLI preview
-
-Real idle CLI output; identifiers and timestamp redacted:
-
-```text
-B42 node [redacted]  |  [timestamp redacted]
-Cached AFE feedback: CHARGE (CHG) DISABLED  DISCHARGE (DSG) DISABLED
-Stack 47.250 V
-Current -0.010 A  Power -0.47 W  (+ charge / - discharge)
-SOC 12.0 %  SOH 95.0 %  Cycles 70 cycles
-Capacity: remaining 2.250 Ah / full 18.274 Ah
-Selected temperature 22.0 °C
-```
-
-This idle sample reports both switches disabled. SOC, SOH and capacities are estimates.
+<h1 align="center">B42 battery pack - unlocked</h1>
 
 ## Unlock & monitor
 
-Our private utility CLI can **unlock battery output for reuse** through the pack's normal CAN authentication and maintain charge/discharge permission. It also offers live telemetry, detailed cell and temperature views, decoded protection flags, switch feedback and JSON logging. **We may release the CLI in the future.**
+Our private utility CLI can **unlock battery output for reuse** through the B42 pack's normal CAN authentication and maintain charge/discharge permission. It also offers live telemetry, detailed cell and temperature views, decoded protection flags, switch feedback and JSON logging. **We will release the CLI at some point in the future.**
 
-Unloaded terminal output has been verified. Loaded discharge and actual charging remain untested; permission and switch feedback alone do not establish energy transfer. Firmware voltage, current, temperature and other protections remain active.
+**B42 Model Label:** `14INR22/71-4`. The arrangement is fourteen series groups of four parallel cells: 56 cells of the 21700 class.
 
-## CAN interface
+| Label rating | Value | Label rating | Value |
+| --- | --- | --- | --- |
+| Nominal voltage | 51.66 V | Rated capacity | 18.3 Ah |
+| Maximum charge voltage | 58.8 V | Rated energy | 945.37 Wh |
+| Maximum charge current | 9.2 A | Maximum discharge current | 36 A |
 
-**Classic CAN · 250 kbit/s · Standard 11-bit identifiers**
+## CLI preview
 
-Periodic reports and on-demand reads expose pack/cell voltages, currents, temperatures, SOC/SOH, design/full/remaining capacities, cycles, balancing, protection flags, charge/discharge feedback, identity and recorded voltage/current/temperature extrema. Recorded extrema do not establish a complete lifetime fault history.
+```shell
+$ b42_pack.py --bluetooth 00:xx:xx:xx:xx:xx --detailed
+B42 node 1  |  2026-10-09T14:55:05.655+00:00
+Cached AFE feedback: CHARGE (CHG) DISABLED  DISCHARGE (DSG) DISABLED
+Identity: LSBTB420FM_xxxxxxxxxxxxx_  |  [CAN interface redacted]
+Firmware 0x00010190  build 0x0077_xx_  model 0x4234_xx_
+Stack 47.280 V  PACK 0.210 V
+Current -0.010 A  Power -0.47 W  (+ charge / - discharge)
+SOC 33.0 %  SOH 95.0 %  Cycles 70 cycles  Discharge estimate n/a
+Capacity: remaining 6.011 Ah / full 18.136 Ah / design 18.000 Ah
+Gauge: SOC 14.0 %  current 0.000 A
+Cells (mV, logical numbering):
+  01: 3374  02: 3374  03: 3374  04: 3375  05: 3375  06: 3376  07: 3375
+  08: 3376  09: 3378  10: 3380  11: 3380  12: 3380  13: 3383  14: 3384
+  Min 3374 mV  max 3384 mV  spread 10 mV  balancing cells none
+Temperatures (°C; sensor 2 = gauge; other physical locations unverified):
+  1: 21.0  2: 22.0  3: 22.0  4: 22.0
+  5: 21.0  6: 21.0  7: 21.0  8: 21.0
+Selected temperature 21.0 °C
+Advertised charge: 58.80 V, 4.00 A
+Dynamic positive-current limit 29.0 A  discharge recommendation 33 (raw)
+Mode/session counters: vehicle charge 0 mAh  discharged 0 mAh
+Fault summary no
+Status: 54=0x0080  58=0x0000  5C=0x0000  60=0x0000  64=0x0008
+Flags: presence absent, discharge auth missing
+Decoded status flags (cached):
+  54: Presence ABSENT [bit 7]  |  Application SOC 20% OR ABOVE [bit 8]  |  Charger detection NOT DETECTED [bit 9]
+      Charge temperature inhibit clear [bit 10]  |  Discharge temperature inhibit clear [bit 11]
+  58: Overvoltage state clear [bit 0]  |  Undervoltage state clear [bit 1]  |  Idle inhibit clear [bit 15]
+  5C: CHARGE (CHG) DISABLED [bit 13]  |  DISCHARGE (DSG) DISABLED [bit 14]  |  Fault summary clear [bit 15]
+  60: Balancing cells none
+  64: Discharge authentication MISSING [bit 3]  |  Predischarge retry failure clear [bit 5]
+      Excessive PACK voltage clear [bit 11]  |  Precharge inactive [bit 12]
+```
 
-Charging and discharge have separate qualifying conditions. For discharge authentication, the pack supplies a challenge; the controller calculates a reply using repeated arithmetic and bit mixing; the pack compares it with its expected answer. A match satisfies the authentication condition, with firmware protections still governing permission.
+```shell
+$ b42_pack.py --bluetooth 00:xx:xx:xx:xx:xx --mode discharge --detailed
+B42 node 1  |  2026-10-11T13:35:29.494+00:00
+Cached AFE feedback: CHARGE (CHG) ENABLED  DISCHARGE (DSG) ENABLED
+Identity: LSBTB420FM_xxxxxxxxxxxxx_  |  [CAN interface redacted]
+Firmware 0x00010190  build 0x0077_xx_  model 0x4234_xx_
+Stack 47.250 V  PACK 47.240 V
+Current -0.010 A  Power -0.47 W  (+ charge / - discharge)
+SOC 14.0 %  SOH 95.0 %  Cycles 70 cycles  Discharge estimate n/a
+Capacity: remaining 2.528 Ah / full 18.252 Ah / design 18.000 Ah
+Gauge: SOC 16.0 %  current 0.000 A
+Cells (mV, logical numbering):
+  01: 3371  02: 3371  03: 3370  04: 3372  05: 3372  06: 3373  07: 3373
+  08: 3374  09: 3375  10: 3376  11: 3378  12: 3377  13: 3380  14: 3381
+  Min 3370 mV  max 3381 mV  spread 11 mV  balancing cells none
+Temperatures (°C; sensor 2 = gauge; other physical locations unverified):
+  1: 22.0  2: 23.0  3: 22.0  4: 22.0
+  5: 22.0  6: 22.0  7: 22.0  8: 22.0
+Selected temperature 22.0 °C
+Advertised charge: 58.80 V, 4.00 A
+Dynamic positive-current limit 29.0 A  discharge recommendation 25 (raw)
+Mode/session counters: vehicle charge 0 mAh  discharged 0 mAh
+Fault summary no
+Status: 54=0x0100  58=0x0000  5C=0x6000  60=0x0000  64=0x0000
+Flags: application SOC below 20%
+Decoded status flags (cached):
+  54: Presence PRESENT [bit 7]  |  Application SOC BELOW 20% [bit 8]  |  Charger detection NOT DETECTED [bit 9]
+      Charge temperature inhibit clear [bit 10]  |  Discharge temperature inhibit clear [bit 11]
+  58: Overvoltage state clear [bit 0]  |  Undervoltage state clear [bit 1]  |  Idle inhibit clear [bit 15]
+  5C: CHARGE (CHG) ENABLED [bit 13]  |  DISCHARGE (DSG) ENABLED [bit 14]  |  Fault summary clear [bit 15]
+  60: Balancing cells none
+  64: Discharge authentication PRESENT [bit 3]  |  Predischarge retry failure clear [bit 5]
+      Excessive PACK voltage clear [bit 11]  |  Precharge inactive [bit 12]
+```
+
+State Of Charge (SOC), State Of Health (SOH) and capacities are drawn directly from the B42 telemetry.
 
 ## Pack & connector
 
@@ -40,16 +94,6 @@ Charging and discharge have separate qualifying conditions. For discharge authen
   <img height="260" alt="External connector wiring" src="https://github.com/user-attachments/assets/43362316-3eeb-4b6c-ab40-e9a65a86fa48" />
   <br><sub>Connector face · Connector wiring</sub>
 </p>
-
-**Label model:** `14INR22/71-4`. The likely arrangement is fourteen series groups of four parallel cells: 56 cells of the 21700 class. Format and arrangement remain tentative.
-
-| Label rating | Value | Label rating | Value |
-| --- | --- | --- | --- |
-| Nominal voltage | 51.66 V | Rated capacity | 18.3 Ah |
-| Maximum charge voltage | 58.8 V | Rated energy | 945.37 Wh |
-| Maximum charge current | 9.2 A | Maximum discharge current | 36 A |
-
-**Connector face:** top row `+ · 4 · −`; bottom row `1 · 2 · 3`.
 
 | Pin | Colour | Function |
 | --- | --- | --- |
@@ -79,3 +123,11 @@ PCB signal wires run top-to-bottom yellow, green, blue, white in the board image
 | 7 | Q206? | NCEP029N10D power MOSFET; reference tentative |
 
 Functional groupings and labelled SWD/I²C access are inferred from visible parts and routing. B1–B13 mark intermediate cell-stack connections; B− and B+ are the ends. Full wiring remains unverified.
+
+## CAN interface
+
+**Classic CAN · 250 kbit/s · Standard 11-bit identifiers**
+
+Periodic reports and on-demand reads expose pack/cell voltages, currents, temperatures, SOC/SOH, design/full/remaining capacities, cycles, balancing, protection flags, charge/discharge feedback, identity and recorded voltage/current/temperature extrema. Recorded extrema do not establish a complete lifetime fault history.
+
+Charging and discharge have separate qualifying conditions. For discharge authentication, the pack supplies a challenge; the controller calculates a reply using repeated arithmetic and bit mixing; the pack compares it with its expected answer. A match satisfies the authentication condition, with firmware protections still governing permission.
