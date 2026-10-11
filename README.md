@@ -136,6 +136,41 @@ Functional groupings and labelled SWD/I²C access are inferred from visible part
 
 **Classic CAN · 250 kbit/s · Standard 11-bit identifiers**
 
-Periodic reports and on-demand reads expose pack/cell voltages, currents, temperatures, SOC/SOH, design/full/remaining capacities, cycles, balancing, protection flags, charge/discharge feedback, identity and recorded voltage/current/temperature extrema. Recorded extrema do not establish a complete lifetime fault history.
+Periodic reports and on-demand reads expose :
+* pack/cell voltages
+* currents
+* temperatures
+* SOC/SOH
+* design/full/remaining capacities
+* cycles
+* balancing
+* protection flags
+* charge/discharge feedback
+* identity
+* recorded voltage/current/temperature extrema (they do not establish a complete lifetime fault history)
 
 Charging and discharge have separate qualifying conditions. For discharge authentication, the pack supplies a challenge; the controller calculates a reply using repeated arithmetic and bit mixing; the pack compares it with its expected answer. A match satisfies the authentication condition, with firmware protections still governing permission.
+
+### CAN Unlock Challenge Response
+```python
+left  = SEED
+right = challenge
+total = 0
+
+repeat 32 rounds:
+    total = u32(total + STEP)
+
+    left = u32(left + (
+        u32((right << 4) + K0)
+        XOR u32((right >> 5) + K1)
+        XOR u32(total + right)
+    ))
+
+    right = u32(right + (
+        u32((left << 4) + K2)
+        XOR u32((left >> 5) + K3)
+        XOR u32(total + left)
+    ))
+
+reply = u32(left + right)
+```
