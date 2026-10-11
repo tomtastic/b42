@@ -1,9 +1,5 @@
 <h1 align="center">B42 battery pack - unlocked</h1>
 
-## Unlock & monitor
-
-Our private utility CLI can **unlock battery output for reuse** through the B42 pack's normal CAN authentication and maintain charge/discharge permission. It also offers live telemetry, detailed cell and temperature views, decoded protection flags, switch feedback and JSON logging. **We will release the CLI at some point in the future.**
-
 **B42 Model Label:** `14INR22/71-4`. The arrangement is fourteen series groups of four parallel cells: 56 cells of the 21700 class.
 
 | Label rating | Value | Label rating | Value |
@@ -11,6 +7,18 @@ Our private utility CLI can **unlock battery output for reuse** through the B42 
 | Nominal voltage | 51.66 V | Rated capacity | 18.3 Ah |
 | Maximum charge voltage | 58.8 V | Rated energy | 945.37 Wh |
 | Maximum charge current | 9.2 A | Maximum discharge current | 36 A |
+
+## Unlock & monitor
+
+Our private utility CLI can :
+
+* **Unlock battery charge/discharge output** through the B42 pack's normal CAN authentication.
+* Display live battery telemetry
+* Detailed cell voltage and temperature views
+* Decoded protection flags
+* Switch feedback and JSON logging.
+
+**We will release the CLI at some point in the future.**
 
 ## CLI preview
 
